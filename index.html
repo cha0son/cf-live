@@ -327,6 +327,29 @@ function showError(title, msg, extra) {
   app.innerHTML = '<div class="errbox"><h3>' + esc(title) + "</h3><p>" + esc(msg) + "</p>" + btns + "</div>";
 }
 
+/**
+ * 兜底：直接把洛谷题面页嵌进来。
+ *
+ * 为什么可行：实测洛谷的题目页既没有 X-Frame-Options，也没有 CSP frame-ancestors，
+ * 也没有 frame-busting 脚本。所以 iframe 能正常显示。
+ * 好处是完全绕开后端——用访客自己的 IP 去加载，不存在机房 IP 被拦的问题。
+ */
+function showEmbedded(pid, reason) {
+  var luoguUrl = "https://www.luogu.com.cn/problem/" + encodeURIComponent(pid);
+  app.innerHTML =
+    '<div class="crumb"><a href="./">← 换一道</a> &nbsp;·&nbsp; ' +
+    '<a href="' + esc(luoguUrl) + '" target="_blank" rel="noopener">在新标签打开洛谷</a></div>' +
+    '<div style="font-size:13px;color:var(--mut);background:rgba(255,180,60,.08);' +
+    'border:1px solid rgba(255,180,60,.3);border-radius:9px;padding:10px 14px;margin-bottom:12px">' +
+    "服务端没抓到题面（" + esc(reason) + "），已改为直接嵌入洛谷页面，内容一样是全的。</div>" +
+    '<iframe src="' + esc(luoguUrl) + '" referrerpolicy="no-referrer" ' +
+    'style="width:100%;height:calc(100vh - 210px);min-height:520px;border:1px solid var(--line);' +
+    'border-radius:12px;background:#fff"></iframe>' +
+    '<div class="foot">题面来自洛谷 · 版权归原作者所有</div>';
+  document.title = pid.slice(0, 0) + "题面 · 洛谷";
+  window.scrollTo(0, 0);
+}
+
 function showReader(pid) {
   document.title = pid + " · 题面速读";
   app.innerHTML = '<div class="skel"></div><div class="skel" style="height:200px"></div>';
@@ -337,16 +360,18 @@ function showReader(pid) {
     })
     .then(function (res) {
       if (!res.ok) {
-        showError("没读到题面", res.body.error || "未知错误",
-                  { luogu: "https://www.luogu.com.cn/problem/" + pid,
-                    cf: res.body.cfUrl });
+        var b = res.body || {};
+        var why = b.error || "未知错误";
+        if (b.upstreamStatus) why += " (上游 " + b.upstreamStatus + ")";
+        // 接口挂了不要只丢一个错误页，直接嵌洛谷，用户照样能读
+        showEmbedded(pid, why);
         return;
       }
       current = res.body;
       renderProblem(current);
     })
     .catch(function (e) {
-      showError("网络错误", String((e && e.message) || e), {});
+      showEmbedded(pid, "网络错误 " + String((e && e.message) || e));
     });
 }
 
