@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>题面速读 · 输入题号直接看题</title>
+<meta name="description" content="输入题号，直接阅读题目描述、样例和限制。支持 Codeforces 与洛谷题号，中英双语。">
+<style>
+  :root{
+    --bg:#0e1116; --panel:#161b22; --panel2:#1c2430; --line:#2a3441;
+    --tx:#e6edf3; --mut:#9aa7b8; --dim:#6b7787; --acc:#4d9fff; --bad:#ff6b6b;
+    --ok:#3fb950;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#fbfcfd; --panel:#fff; --panel2:#f2f5f8; --line:#dde4ec;
+           --tx:#1a2029; --mut:#5a6775; --dim:#8b97a6; --acc:#0969da;
+           --bad:#c62828; --ok:#1a7f37; }
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--tx);
+    font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",
+         "Microsoft YaHei",Roboto,sans-serif; -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--acc); text-decoration:none}
+  a:hover{text-decoration:underline}
+
+  .bar{position:sticky; top:0; z-index:10; background:var(--bg);
+       border-bottom:1px solid var(--line); padding:11px 20px}
+  .bar-in{max-width:820px; margin:0 auto; display:flex; gap:12px; align-items:center}
+  .logo{font-weight:700; font-size:15px; white-space:nowrap}
+  form.jump{display:flex; gap:7px; flex:1; max-width:380px; margin-left:auto}
+  form.jump input{
+    flex:1; min-width:0; padding:8px 12px; border-radius:9px; font:14px inherit;
+    background:var(--panel2); border:1px solid var(--line); color:inherit; outline:none;
+  }
+  form.jump input:focus{border-color:var(--acc)}
+  form.jump button, .btn{
+    padding:8px 16px; border-radius:9px; font-size:14px; font-weight:600;
+    background:var(--acc); color:#fff; border:none; cursor:pointer;
+  }
+  form.jump button:hover, .btn:hover{filter:brightness(1.1); text-decoration:none}
+  .btn.ghost{background:transparent; color:var(--acc); border:1px solid var(--line)}
+
+  .wrap{max-width:820px; margin:0 auto; padding:26px 20px 90px}
+
+  /* 首页 */
+  .hero{text-align:center; padding:46px 0 26px}
+  .hero h1{font-size:clamp(26px,4.6vw,38px); margin:0 0 12px; letter-spacing:-.5px}
+  .hero p{margin:0 auto; max-width:580px; color:var(--mut); font-size:15px}
+  .bigform{display:flex; gap:9px; max-width:460px; margin:26px auto 0}
+  .bigform input{
+    flex:1; min-width:0; padding:13px 16px; border-radius:11px; font:16px inherit;
+    background:var(--panel); border:1px solid var(--line); color:inherit; outline:none;
+  }
+  .bigform input:focus{border-color:var(--acc); box-shadow:0 0 0 3px rgba(77,159,255,.14)}
+  .bigform button{padding:13px 22px; border-radius:11px; font-size:15px}
+  .hintline{margin-top:12px; font-size:12.5px; color:var(--dim)}
+  .chips{display:flex; gap:7px; justify-content:center; flex-wrap:wrap; margin-top:22px}
+  .chips a{font-size:13px; padding:5px 12px; border-radius:99px;
+           background:var(--panel2); border:1px solid var(--line); color:var(--mut)}
+  .chips a:hover{border-color:var(--acc); color:var(--acc); text-decoration:none}
+  .recent{margin-top:34px; text-align:left}
+  .recent h3{font-size:12px; letter-spacing:1px; text-transform:uppercase;
+             color:var(--dim); margin:0 0 10px}
+  .recent ul{list-style:none; padding:0; margin:0; display:grid; gap:7px}
+  .recent li a{display:flex; gap:10px; align-items:center; padding:10px 14px;
+               background:var(--panel); border:1px solid var(--line); border-radius:9px;
+               color:inherit; font-size:14px}
+  .recent li a:hover{background:var(--panel2); text-decoration:none}
+
+  /* 阅读页 */
+  .crumb{font-size:13px; color:var(--dim); margin-bottom:10px}
+  h1{font-size:25px; line-height:1.35; margin:0 0 12px; letter-spacing:-.3px}
+  .meta{display:flex; gap:7px; flex-wrap:wrap; font-size:12.5px; margin-bottom:6px}
+  .meta span{background:var(--panel2); border:1px solid var(--line); color:var(--mut);
+             padding:3px 10px; border-radius:99px}
+  .difficulty{font-weight:800}
+  h2{font-size:13px; text-transform:uppercase; letter-spacing:1.1px; color:var(--dim);
+     margin:32px 0 10px; padding-bottom:7px; border-bottom:1px solid var(--line)}
+  .md p{margin:0 0 14px}
+  .md ul,.md ol{margin:0 0 14px; padding-left:24px}
+  .md li{margin:5px 0}
+  .md pre{background:var(--panel2); border:1px solid var(--line); border-radius:8px;
+          padding:11px 13px; overflow-x:auto; font-size:13px; margin:0 0 14px}
+  .md code{background:var(--panel2); padding:1px 5px; border-radius:4px; font-size:.92em;
+           font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+  .md pre code{background:none; padding:0}
+  .math{font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:.93em;
+        color:#8fd0ff; background:rgba(77,159,255,.09); padding:1px 5px;
+        border-radius:4px; white-space:pre-wrap}
+  .math-block{display:block; font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+              font-size:.93em; color:#8fd0ff; background:rgba(77,159,255,.07);
+              border-left:2px solid rgba(77,159,255,.45); padding:9px 13px;
+              border-radius:0 6px 6px 0; margin:12px 0; overflow-x:auto; white-space:pre-wrap}
+  @media (prefers-color-scheme: light){
+    .math{color:#0550ae; background:rgba(9,105,218,.08)}
+    .math-block{color:#0550ae; background:rgba(9,105,218,.06); border-left-color:rgba(9,105,218,.4)}
+  }
+
+  .sample{margin:16px 0 22px; border:1px solid var(--line); border-radius:10px;
+          overflow:hidden; background:var(--panel)}
+  .sample-head{display:flex; justify-content:space-between; padding:8px 12px;
+               background:var(--panel2); border-bottom:1px solid var(--line);
+               font-size:12px; color:var(--mut)}
+  .sample-body{display:grid; grid-template-columns:1fr 1fr}
+  @media (max-width:720px){ .sample-body{grid-template-columns:1fr} }
+  .sample-col{padding:12px 14px; min-width:0}
+  .sample-col + .sample-col{border-left:1px solid var(--line)}
+  @media (max-width:720px){
+    .sample-col + .sample-col{border-left:none; border-top:1px solid var(--line)}
+  }
+  .sample-col h4{margin:0 0 8px; font-size:11px; letter-spacing:1px;
+                 text-transform:uppercase; color:var(--dim)}
+  pre.sample-pre{margin:0; font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+      font-size:13px; line-height:1.55; white-space:pre; overflow-x:auto; color:var(--tx)}
+  button.copy{background:var(--panel); border:1px solid var(--line); color:var(--mut);
+              font-size:11px; padding:3px 10px; border-radius:6px; cursor:pointer}
+  button.copy:hover{border-color:var(--acc); color:var(--acc)}
+
+  .langseg{display:inline-flex; padding:3px; gap:3px; background:var(--panel2);
+           border-radius:9px; border:1px solid var(--line); font-size:12.5px}
+  .langseg button{padding:4px 12px; border-radius:7px; color:var(--mut); border:none;
+                  background:none; cursor:pointer; font-size:12.5px}
+  .langseg button.on{background:var(--line); color:var(--tx); font-weight:600}
+
+  .skel{height:120px; border-radius:10px; background:var(--panel);
+        border:1px solid var(--line); margin-bottom:12px; position:relative; overflow:hidden}
+  .skel::after{content:""; position:absolute; inset:0;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.05),transparent);
+    animation:sh 1.2s infinite}
+  @keyframes sh{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+
+  .errbox{border:1px solid #5b2d2d; background:rgba(255,107,107,.07); border-radius:12px;
+          padding:20px 22px; margin:20px 0}
+  .errbox h3{margin:0 0 8px; color:var(--bad); font-size:16px}
+  .errbox p{margin:0 0 14px; color:var(--mut); font-size:14px}
+  .foot{margin-top:40px; padding-top:16px; border-top:1px solid var(--line);
+        font-size:12px; color:var(--dim); line-height:1.9}
+  @media print{ .bar,.foot,button.copy,.langseg{display:none} body{background:#fff;color:#000} }
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <div class="bar-in">
+    <div class="logo">题面速读</div>
+    <form class="jump" id="jump" autocomplete="off">
+      <input id="jumpInput" placeholder="题号，如 1858B 或 P1001" spellcheck="false">
+      <button type="submit">打开</button>
+    </form>
+  </div>
+</div>
+
+<div class="wrap" id="app"></div>
+
+<script>
+(function () {
+"use strict";
+
+var app = document.getElementById("app");
+var EXAMPLES = ["1858B", "1407C", "1914E2", "P1001"];
+var RECENT_KEY = "cfread.recent.v2";
+var LANG_KEY = "cfread.lang";
+
+/* ---------------- 小工具 ---------------- */
+function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+  });
+}
+
+function toPid(raw) {
+  if (!raw) return null;
+  var s = String(raw).trim().toUpperCase().replace(/\s+/g, "");
+  var u = s.match(/CODEFORCES\.COM\/PROBLEMSET\/PROBLEM\/(\d+)\/([A-Z]\d*)/);
+  if (u) return "CF" + u[1] + u[2];
+  var l = s.match(/LUOGU\.COM\.CN\/PROBLEM\/([A-Z0-9_]+)/);
+  if (l) return l[1];
+  if (/^[A-Z][A-Z0-9_]*\d[A-Z0-9_]*$/.test(s)) return s;
+  var m = s.match(/^(\d+)[/-]?([A-Z]\d*)$/);
+  if (m) return "CF" + m[1] + m[2];
+  return null;
+}
+
+// 洛谷难度 1-7
+function diffColor(d) {
+  return ["#9aa0a6", "#f87171", "#fb923c", "#fbbf24", "#4ade80", "#22d3ee", "#a78bfa", "#f472b6"][d] || "#9aa0a6";
+}
+var DIFF_NAME = ["", "入门", "普及-", "普及/提高-", "普及+/提高", "提高+/省选-", "省选/NOI-", "NOI/NOI+"];
+
+function recent() {
+  try { return JSON.parse(localStorage.getItem(RECENT_KEY) || "[]"); } catch (e) { return []; }
+}
+function pushRecent(id, title) {
+  try {
+    var list = recent().filter(function (x) { return x.id !== id; });
+    list.unshift({ id: id, title: title || "" });
+    localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, 8)));
+  } catch (e) {}
+}
+function getLang() {
+  try { return localStorage.getItem(LANG_KEY) || "zh-CN"; } catch (e) { return "zh-CN"; }
+}
+function setLang(v) {
+  try { localStorage.setItem(LANG_KEY, v); } catch (e) {}
+}
+
+/* ---------------- 极简 Markdown + LaTeX ----------------
+   洛谷的题面是 Markdown，公式用 $...$ / $$...$$。
+   先把公式挖出来占位，再做 Markdown，最后放回去，
+   这样公式里的 _ { } * 不会被 Markdown 规则误伤。
+----------------------------------------------------- */
+function renderMarkdown(md) {
+  var math = [];
+  var text = String(md || "");
+
+  text = text.replace(/\$\$([\s\S]+?)\$\$/g, function (m, tex) {
+    math.push({ tex: tex.trim(), block: true });
+    return "\u0000M" + (math.length - 1) + "\u0000";
+  });
+  text = text.replace(/\$([^$\n]+?)\$/g, function (m, tex) {
+    math.push({ tex: tex.trim(), block: false });
+    return "\u0000M" + (math.length - 1) + "\u0000";
+  });
+
+  text = esc(text);
+
+  // 代码块
+  var blocks = [];
+  text = text.replace(/```([\s\S]*?)```/g, function (m, code) {
+    blocks.push(code.replace(/^\n+|\n+$/g, ""));
+    return "\u0000C" + (blocks.length - 1) + "\u0000";
+  });
+
+  text = text.replace(/`([^`\n]+)`/g, "<code>$1</code>");
+  text = text.replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>");
+  text = text.replace(/(^|[\s(])\*([^*\n]+)\*/g, "$1<em>$2</em>");
+  text = text.replace(/^######\s+(.*)$/gm, "<h4>$1</h4>");
+  text = text.replace(/^#####\s+(.*)$/gm, "<h4>$1</h4>");
+  text = text.replace(/^####\s+(.*)$/gm, "<h4>$1</h4>");
+  text = text.replace(/^###\s+(.*)$/gm, "<h4>$1</h4>");
+  text = text.replace(/^##\s+(.*)$/gm, "<h3>$1</h3>");
+  text = text.replace(/^#\s+(.*)$/gm, "<h3>$1</h3>");
+
+  // 列表
+  text = text.replace(/(?:^|\n)((?:[-*+]\s+.*(?:\n|$))+)/g, function (m, group) {
+    var items = group.trim().split(/\n/).map(function (line) {
+      return "<li>" + line.replace(/^[-*+]\s+/, "") + "</li>";
+    }).join("");
+    return "\n<ul>" + items + "</ul>";
+  });
+  text = text.replace(/(?:^|\n)((?:\d+\.\s+.*(?:\n|$))+)/g, function (m, group) {
+    var items = group.trim().split(/\n/).map(function (line) {
+      return "<li>" + line.replace(/^\d+\.\s+/, "") + "</li>";
+    }).join("");
+    return "\n<ol>" + items + "</ol>";
+  });
+
+  // 段落
+  var parts = text.split(/\n{2,}/).map(function (chunk) {
+    var t = chunk.trim();
+    if (!t) return "";
+    if (/^<(h3|h4|ul|ol|pre)/.test(t)) return t;
+    if (/^\u0000C\d+\u0000$/.test(t)) return t;
+    return "<p>" + t.replace(/\n/g, "<br>") + "</p>";
+  });
+  text = parts.join("\n");
+
+  // 还原代码块
+  text = text.replace(/\u0000C(\d+)\u0000/g, function (m, i) {
+    return "<pre><code>" + esc(blocks[+i]) + "</code></pre>";
+  });
+  // 还原公式
+  text = text.replace(/\u0000M(\d+)\u0000/g, function (m, i) {
+    var item = math[+i];
+    var cls = item.block ? "math-block" : "math";
+    return '<span class="' + cls + '">' + esc(item.tex) + "</span>";
+  });
+  return text;
+}
+
+/* ---------------- 首页 ---------------- */
+function showHome() {
+  document.title = "题面速读 · 输入题号直接看题";
+  var ex = EXAMPLES.map(function (id) { return '<a href="?id=' + id + '">' + id + "</a>"; }).join("");
+
+  var rc = recent();
+  var rcHtml = "";
+  if (rc.length) {
+    rcHtml = '<div class="recent"><h3>最近看过</h3><ul>' + rc.map(function (x) {
+      return '<li><a href="?id=' + encodeURIComponent(x.id) + '">' +
+        "<b>" + esc(x.id) + '</b><span style="color:var(--mut)">' + esc(x.title) + "</span></a></li>";
+    }).join("") + "</ul></div>";
+  }
+
+  app.innerHTML =
+    '<div class="hero">' +
+    "<h1>输入题号,直接读题</h1>" +
+    "<p>题目描述、样例、时限一次给全,中英双语可切换,样例一键复制。" +
+    "数据来自洛谷镜像,不用翻墙也不用跳站。</p>" +
+    '<form class="bigform" id="bigform">' +
+    '<input id="bigInput" placeholder="1858B / P1001 / 粘贴链接" spellcheck="false">' +
+    '<button type="submit">读题</button></form>' +
+    '<div class="hintline">支持 Codeforces 题号(<code>1858B</code>)和洛谷题号(<code>P1001</code>)</div>' +
+    '<div class="chips">' + ex + "</div>" +
+    "</div>" + rcHtml +
+    '<div class="foot">题面抓取自洛谷,版权归 Codeforces / 洛谷及各题作者所有。</div>';
+
+  document.getElementById("bigform").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var el = document.getElementById("bigInput");
+    var pid = toPid(el.value);
+    if (!pid) { el.focus(); el.style.borderColor = "var(--bad)"; return; }
+    location.search = "?id=" + encodeURIComponent(pid);
+  });
+}
+
+/* ---------------- 阅读页 ---------------- */
+var current = null;
+
+function showError(title, msg, extra) {
+  var btns = "";
+  if (extra && extra.luogu) btns += '<a class="btn" href="' + esc(extra.luogu) + '" target="_blank" rel="noopener">去洛谷打开</a> ';
+  if (extra && extra.cf) btns += '<a class="btn ghost" href="' + esc(extra.cf) + '" target="_blank" rel="noopener">去 Codeforces</a> ';
+  btns += '<a class="btn ghost" href="./">换个题号</a>';
+  app.innerHTML = '<div class="errbox"><h3>' + esc(title) + "</h3><p>" + esc(msg) + "</p>" + btns + "</div>";
+}
+
+function showReader(pid) {
+  document.title = pid + " · 题面速读";
+  app.innerHTML = '<div class="skel"></div><div class="skel" style="height:200px"></div>';
+
+  fetch("api/problem?id=" + encodeURIComponent(pid), { cache: "no-cache" })
+    .then(function (r) {
+      return r.json().then(function (body) { return { ok: r.ok, body: body }; });
+    })
+    .then(function (res) {
+      if (!res.ok) {
+        showError("没读到题面", res.body.error || "未知错误",
+                  { luogu: "https://www.luogu.com.cn/problem/" + pid,
+                    cf: res.body.cfUrl });
+        return;
+      }
+      current = res.body;
+      renderProblem(current);
+    })
+    .catch(function (e) {
+      showError("网络错误", String((e && e.message) || e), {});
+    });
+}
+
+function locContent(p, lang) {
+  if (p.translations && p.translations[lang]) return p.translations[lang];
+  if (lang !== "en" && p.translations && p.translations["zh-CN"]) return p.translations["zh-CN"];
+  return p.content;
+}
+
+function renderProblem(p) {
+  var lang = getLang();
+  var c = locContent(p, lang);
+  var hasZh = !!(p.translations && p.translations["zh-CN"]);
+  var hasEn = !!(p.translations && p.translations["en"]);
+
+  var meta = [];
+  if (p.difficulty) {
+    meta.push('<span>难度 <b class="difficulty" style="color:' + diffColor(p.difficulty) + '">' +
+      p.difficulty + " " + (DIFF_NAME[p.difficulty] || "") + "</b></span>");
+  }
+  if (p.timeMs) meta.push("<span>时限 " + (p.timeMs / 1000) + " 秒</span>");
+  if (p.memoryKb) meta.push("<span>内存 " + Math.round(p.memoryKb / 1024) + " MB</span>");
+  if (p.submit != null) {
+    var rate = p.submit ? Math.round((p.accepted / p.submit) * 100) : 0;
+    meta.push("<span>通过 " + p.accepted + " / " + p.submit + " (" + rate + "%)</span>");
+  }
+
+  var langSeg = "";
+  if (hasZh && hasEn) {
+    langSeg = '<div style="margin-left:auto"><span class="langseg">' +
+      '<button data-lang="zh-CN" class="' + (lang !== "en" ? "on" : "") + '">中文</button>' +
+      '<button data-lang="en" class="' + (lang === "en" ? "on" : "") + '">English</button>' +
+      "</span></div>";
+  }
+
+  var parts = [];
+  var secs = [
+    ["background", "题目背景"],
+    ["description", "题目描述"],
+    ["formatI", "输入格式"],
+    ["formatO", "输出格式"],
+  ];
+  secs.forEach(function (pair) {
+    var v = c[pair[0]];
+    if (v && String(v).trim()) {
+      parts.push("<h2>" + pair[1] + '</h2><div class="md">' + renderMarkdown(v) + "</div>");
+    }
+  });
+
+  if (p.samples && p.samples.length) {
+    parts.push("<h2>样例</h2>");
+    p.samples.forEach(function (s, i) {
+      var label = p.samples.length > 1 ? "样例 " + (i + 1) : "样例";
+      parts.push(
+        '<div class="sample"><div class="sample-head"><span>' + label +
+        "</span><span>" + esc(p.id) + "</span></div>" +
+        '<div class="sample-body">' +
+        '<div class="sample-col"><h4>输入 <button class="copy">复制</button></h4>' +
+        '<pre class="sample-pre">' + esc(s.input) + "</pre></div>" +
+        '<div class="sample-col"><h4>输出 <button class="copy">复制</button></h4>' +
+        '<pre class="sample-pre">' + esc(s.output) + "</pre></div></div></div>");
+    });
+  }
+
+  if (c.hint && String(c.hint).trim()) {
+    parts.push("<h2>提示</h2>" + '<div class="md">' + renderMarkdown(c.hint) + "</div>");
+  }
+
+  var links = '<a href="' + esc(p.url) + '" target="_blank" rel="noopener">洛谷原页</a>';
+  if (p.cfUrl) links += ' &nbsp;·&nbsp; <a href="' + esc(p.cfUrl) + '" target="_blank" rel="noopener">Codeforces 提交</a>';
+
+  app.innerHTML =
+    '<div class="crumb"><a href="./">← 换一道</a> &nbsp;·&nbsp; ' + links + "</div>" +
+    "<h1>" + esc(p.title) + "</h1>" +
+    '<div class="meta" style="align-items:center">' + meta.join("") + langSeg + "</div>" +
+    parts.join("") +
+    '<div class="foot">抓取于 ' + new Date(p.fetchedAt).toLocaleString("zh-CN") +
+    " · 数据源: 洛谷 · 题目版权归原作者所有</div>";
+
+  app.querySelectorAll("button.copy").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var pre = btn.closest(".sample-col").querySelector("pre");
+      copyText(pre.textContent, btn);
+    });
+  });
+  app.querySelectorAll(".langseg button").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      setLang(btn.dataset.lang);
+      renderProblem(p);          // 无需重新请求，两个语言的正文都在手上
+    });
+  });
+
+  pushRecent(p.id, p.title);
+  document.title = p.id + " · " + p.title;
+  window.scrollTo(0, 0);
+}
+
+function copyText(text, btn) {
+  var done = function () {
+    var old = btn.textContent;
+    btn.textContent = "已复制";
+    setTimeout(function () { btn.textContent = old; }, 1200);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done, function () { fallback(text, done); });
+  } else {
+    fallback(text, done);
+  }
+}
+function fallback(text, cb) {
+  var ta = document.createElement("textarea");
+  ta.value = text;
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand("copy"); cb(); } catch (e) { alert("复制失败，请手动选中"); }
+  document.body.removeChild(ta);
+}
+
+/* ---------------- 启动 ---------------- */
+document.getElementById("jump").addEventListener("submit", function (e) {
+  e.preventDefault();
+  var el = document.getElementById("jumpInput");
+  var pid = toPid(el.value);
+  if (!pid) { el.focus(); el.style.borderColor = "var(--bad)"; return; }
+  location.search = "?id=" + encodeURIComponent(pid);
+});
+
+var qid = new URLSearchParams(location.search).get("id");
+if (qid && toPid(qid)) {
+  showReader(toPid(qid));
+} else if (qid) {
+  showError("题号格式不对", "支持 1858B、CF1858B、P1001 或完整链接。", {});
+} else {
+  showHome();
+}
+})();
+</script>
+</body>
+</html>

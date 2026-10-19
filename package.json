@@ -1,0 +1,13 @@
+{
+  "name": "cf-reader-live",
+  "version": "1.0.0",
+  "private": true,
+  "description": "输入题号，实时读取题目描述、样例与限制",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node _test_api.js && node _test_ui.js",
+    "dev": "vercel dev"
+  }
+}
