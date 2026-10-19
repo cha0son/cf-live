@@ -65,7 +65,15 @@ module.exports = async function handler(req, res) {
     const status = e.status || 502;
     send(res, status, {
       error: e.message || "抓取失败",
-      hint: status === 404 ? "检查题号是否存在" : "稍后重试，或直接去洛谷/Codeforces 打开",
+      // 把上游的真实反应带出来，不然只看到一个 502/403 没法排查
+      upstreamStatus: e.upstreamStatus || null,
+      upstreamServer: e.upstreamServer || null,
+      upstreamCfRay: e.upstreamCfRay || null,
+      snippet: e.upstreamSnippet || null,
+      hint: status === 404
+        ? "检查题号是否存在"
+        : "如果这里有 upstreamStatus，说明是数据源拦了这台机器的出口 IP；"
+          + "可以试试把函数部署区域改到香港（vercel.json 里的 regions），或者直接用 /api/debug 看详情",
     });
   }
 };

@@ -1,7 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "regions": ["hkg1"],
   "functions": {
     "api/problem.js": {
+      "maxDuration": 10
+    },
+    "api/debug.js": {
       "maxDuration": 10
     }
   }
