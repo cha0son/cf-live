@@ -354,8 +354,13 @@ function showReader(pid) {
   document.title = pid + " · 题面速读";
   app.innerHTML = '<div class="skel"></div><div class="skel" style="height:200px"></div>';
 
-  fetch("api/problem?id=" + encodeURIComponent(pid), { cache: "no-cache" })
+  // 4.5 秒拿不到就嵌 iframe，别让访客干等
+  var ctrl = new AbortController();
+  var timer = setTimeout(function(){ ctrl.abort(); }, 4500);
+
+  fetch("api/problem?id=" + encodeURIComponent(pid), { signal: ctrl.signal, cache: "no-cache" })
     .then(function (r) {
+      clearTimeout(timer);
       return r.json().then(function (body) { return { ok: r.ok, body: body }; });
     })
     .then(function (res) {
@@ -371,7 +376,8 @@ function showReader(pid) {
       renderProblem(current);
     })
     .catch(function (e) {
-      showEmbedded(pid, "网络错误 " + String((e && e.message) || e));
+      clearTimeout(timer);
+      showEmbedded(pid, (e && e.name === "AbortError") ? "接口超时" : "网络错误");
     });
 }
 
