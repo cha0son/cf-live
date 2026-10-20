@@ -1,0 +1,67 @@
+name: probe-luogu
+
+# 探针：从 GitHub Actions 的机房出口访问洛谷，看是否同样被 403。
+# 只在 probe/trigger.txt 变化时触发，避免 bot 自己提交导致循环。
+
+on:
+  push:
+    paths:
+      - 'probe/trigger.txt'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: probe luogu
+        run: |
+          set +e
+          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+          URL="https://www.luogu.com.cn/problem/CF1858B"
+          mkdir -p probe
+          {
+            echo "runner_ip: $(curl -s --max-time 15 https://api.ipify.org)"
+            echo "geo: $(curl -s --max-time 15 http://ip-api.com/line/?fields=country,regionName,isp)"
+            echo ""
+            echo "=== A. 极简头（仅 UA），不跟重定向 ==="
+            curl -s -o /tmp/a.html -w "status=%{http_code} size=%{size_download} time=%{time_total}\n" \
+                 --max-time 30 -A "$UA" -c /tmp/cookies.txt "$URL"
+            echo "title: $(grep -o '<title>[^<]*' /tmp/a.html | head -1)"
+            echo "has_problem_json: $(grep -c '\"problem\"' /tmp/a.html)"
+            echo "first200: $(head -c 200 /tmp/a.html | tr -d '\n')"
+            echo ""
+            echo "=== B. 带 cookie 跟随重定向 ==="
+            curl -sL -o /tmp/b.html -w "status=%{http_code} size=%{size_download}\n" \
+                 --max-time 30 -A "$UA" -b /tmp/cookies.txt -c /tmp/cookies.txt "$URL"
+            echo "title: $(grep -o '<title>[^<]*' /tmp/b.html | head -1)"
+            echo "has_problem_json: $(grep -c '\"problem\"' /tmp/b.html)"
+            echo ""
+            echo "=== C. 完整浏览器头 ==="
+            curl -sL -o /tmp/c.html -w "status=%{http_code} size=%{size_download}\n" --max-time 30 \
+                 -A "$UA" -H "Accept: text/html,application/xhtml+xml" \
+                 -H "Accept-Language: zh-CN,zh;q=0.9" -H "Referer: https://www.luogu.com.cn/" \
+                 "$URL"
+            echo "has_problem_json: $(grep -c '\"problem\"' /tmp/c.html)"
+            echo ""
+            echo "=== D. 对照：Codeforces API 是否可达 ==="
+            curl -s -o /dev/null -w "cfapi_status=%{http_code} time=%{time_total}\n" --max-time 20 \
+                 "https://codeforces.com/api/user.info?handles=tourist"
+          } > probe/latest.txt 2>&1
+          cat probe/latest.txt
+
+      - name: commit result
+        run: |
+          git config user.name "probe-bot"
+          git config user.email "probe-bot@users.noreply.github.com"
+          git add probe/latest.txt
+          if git diff --cached --quiet; then
+            echo "无变化"
+            exit 0
+          fi
+          git commit -m "probe: update result"
+          git push
