@@ -1,0 +1,22 @@
+runner_ip: 70.37.74.131
+geo: United States
+Texas
+Microsoft Corporation
+
+=== A. 极简头（仅 UA），不跟重定向 ===
+status=403 size=5548 time=0.347298
+title: <title>Just a moment...
+has_problem_json: 0
+first200: <!DOCTYPE html><html lang="en-US"><head><title>Just a moment...</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=Edge"><meta nam
+
+=== B. 带 cookie 跟随重定向 ===
+status=403 size=5548
+title: <title>Just a moment...
+has_problem_json: 0
+
+=== C. 完整浏览器头 ===
+status=403 size=5612
+has_problem_json: 0
+
+=== D. 对照：Codeforces API 是否可达 ===
+cfapi_status=200 time=0.317600
